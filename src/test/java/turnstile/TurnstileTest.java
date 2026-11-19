@@ -468,20 +468,41 @@ public final class TurnstileTest {
         Turnstile<Integer> queue = new Turnstile<>(16);
         int capacity = queue.capacity();
         AtomicBoolean stop = new AtomicBoolean();
+        AtomicBoolean sampled = new AtomicBoolean();
         AtomicReference<Throwable> problem = new AtomicReference<>();
+        AtomicInteger offered = new AtomicInteger();
+        AtomicInteger polled = new AtomicInteger();
         int[] extremes = new int[2];
+        // The ring is full before anything moves, and the consumer stays gated
+        // until the sampler has taken its first reading. Without both halves the
+        // case is a race three spinning threads can lose: one producer and one
+        // consumer with an unbounded backlog leave the queue empty almost all of
+        // the time, so `size()` legitimately reads zero half a million times in a
+        // row. That is what failed the second CI run on ubuntu/JDK 21, and the
+        // assertion was the defect, not the queue.
+        for (int i = 0; i < capacity; i++) {
+            queue.offer(i);
+        }
 
         Thread producer = new Thread(() -> {
-            int value = 0;
+            int value = capacity;
             while (!stop.get()) {
-                if (!queue.offer(value++)) {
+                if (queue.offer(value++)) {
+                    offered.incrementAndGet();
+                } else {
                     Thread.onSpinWait();
                 }
             }
         }, "sizer-producer");
         Thread consumer = new Thread(() -> {
             while (!stop.get()) {
-                queue.poll();
+                if (!sampled.get()) {
+                    Thread.onSpinWait();
+                    continue;
+                }
+                if (queue.poll() != null) {
+                    polled.incrementAndGet();
+                }
             }
         }, "sizer-consumer");
         Thread sampler = new Thread(() -> {
@@ -496,9 +517,13 @@ public final class TurnstileTest {
                     }
                     min = Math.min(min, size);
                     max = Math.max(max, size);
+                    if (round == 0) {
+                        sampled.set(true);
+                    }
                 }
             } catch (Throwable broken) {
                 problem.compareAndSet(null, broken);
+                sampled.set(true); // never hold the consumer for a failed case
             }
             extremes[0] = min;
             extremes[1] = max;
@@ -514,10 +539,11 @@ public final class TurnstileTest {
         consumer.join();
 
         Harness.check(problem.get() == null, "size() left its bounds: " + problem.get());
-        Harness.check(extremes[1] >= 1,
-                "the sampler actually saw a non-empty ring, largest reading " + extremes[1]);
-        Harness.check(extremes[0] <= capacity,
-                "smallest reading " + extremes[0] + " against a capacity of " + capacity);
+        Harness.check(extremes[1] == capacity,
+                "the sampler saw the full ring it started with, largest reading " + extremes[1]);
+        Harness.check(offered.get() >= 1 && polled.get() >= 1,
+                "traffic ran while it sampled: " + offered.get() + " offered, " + polled.get()
+                        + " polled, readings spanned " + extremes[0] + ".." + extremes[1]);
         Harness.check(!queue.isEmpty() || queue.size() == 0, "isEmpty and size agree at rest");
     }
 }

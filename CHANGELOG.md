@@ -11,8 +11,9 @@ Nothing pending.
 
 ## [0.1.1] - 2026-11-19
 
-Documentation and packaging metadata. Nothing in the queue, the harness or the
-measurements changed, and no benchmark number in the README moved.
+Two shipped documentation defects, one packaging file, and one test that could
+fail when nothing was wrong. Nothing in the queue or in the measurements changed,
+and no benchmark number in the README moved.
 
 ### Fixed
 
@@ -32,6 +33,16 @@ measurements changed, and no benchmark number in the README moved.
   heads every source file, and the contribution clause. The two full texts were
   always in `LICENSE-APACHE` and `LICENSE-MIT`; this is the file tools look for
   when they do not read the README.
+- `size stays inside [0, capacity] under traffic` stopped depending on being lucky.
+  It asserted that the sampler had seen a non-empty ring, and on the second suite
+  run of `ubuntu-latest / JDK 21` it reported the largest reading `0`: one producer
+  and one consumer draining a pre-existing backlog leave an empty ring almost all
+  of the time, so `size()` was right and the case was unsound. It now constructs
+  the condition instead of racing for it — the ring is full before any thread
+  starts, the consumer stays gated until the sampler has published its first
+  reading, and that first reading must be `capacity`; traffic is proven by the
+  producer's and consumer's own counters rather than by a racy observation. The
+  queue never had the defect the case could report.
 
 ## [0.1.0] - 2026-11-19
 
