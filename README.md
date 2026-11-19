@@ -327,6 +327,16 @@ hygiene checks — an import allowlist that fails on any package outside the JDK
 experiment` from a clean tree, and a check that `build.sh` is still committed
 mode `100755` so `sh ./build.sh` keeps working on the runners that care.
 
+Two of those have already caught something real. The mode check failed a commit
+whose own message was about documentation: the working copy sits on a filesystem
+that does not carry the executable bit, and a mode change the author never made
+rode along into the tree. And JDK 21's doclint rejects a Javadoc block that opens
+straight into `@param` or `@return` with no leading sentence, while JDK 17's
+accepts the identical file — so one leg of the matrix compiled and the other
+did not. Neither is a defect in the queue: one is a mode bit, the other a
+comment with no first sentence. Both needed a second opinion to be visible — a
+different JDK, or a check that reads the index instead of the source.
+
 The whole suite runs twice on every platform, because a concurrency test that
 passes once proves less than it looks like it does. A case
 that hangs becomes a `TIMEOUT` and exit code 2 after
