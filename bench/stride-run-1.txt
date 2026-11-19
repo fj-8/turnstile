@@ -1,0 +1,22 @@
+java.version          = 17.0.20.1
+os.name               = Windows 11
+availableProcessors   = 20
+workload              = 2,000,000 elements, median of 5 reps after 1 warm-up
+
+capacity shape         stride 1 ns    stride 8 ns       gain
+64       P:1 C:1             96            112      0.86x
+64       P:2 C:2            218            171      1.27x
+64       P:4 C:4            264            222      1.19x
+64       P:8 C:8            325            319      1.02x
+1024     P:1 C:1             95             97      0.98x
+1024     P:2 C:2            163            152      1.07x
+1024     P:4 C:4            193            178      1.08x
+1024     P:8 C:8            242            256      0.95x
+4096     P:1 C:1             96             90      1.07x
+4096     P:2 C:2            194            150      1.29x
+4096     P:4 C:4            216            204      1.06x
+4096     P:8 C:8            218            250      0.87x
+
+  Both columns are the same algorithm and the same code path; only the
+  distance between sequence words differs. Memory for the sequences goes
+  from capacity x 8 bytes to capacity x 64 bytes, which is the price.

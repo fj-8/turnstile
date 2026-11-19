@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Two pushes in a row should not queue behind each other on a PR branch, but a
+# run on main is never cancelled: main is the release, and its history is the
+# evidence. The group key keeps the two cases apart.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / JDK ${{ matrix.jdk }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        jdk: ["17", "21"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.jdk }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.jdk }}
+
+      # The same two commands build.sh wraps, written out so a failure names the
+      # stage in the log instead of hiding behind a script.
+      - name: Compile the public API (lint and doclint strict)
+        run: |
+          mkdir -p out/classes
+          javac -Xlint:all -Xdoclint:all/protected -Werror -d out/classes \
+            $(find src/main/java -name '*.java' | sort)
+        shell: bash
+
+      - name: Compile the tests and the bench (lint strict)
+        run: |
+          javac -Xlint:all -Werror -cp out/classes -d out/classes \
+            $(find src/test/java bench/java -name '*.java' | sort)
+        shell: bash
+
+      - name: Run the suite
+        run: java -cp out/classes turnstile.TurnstileTest
+        shell: bash
+
+      - name: Run the suite again (concurrency cases must not be lucky once)
+        run: java -cp out/classes turnstile.TurnstileTest
+        shell: bash
+
+  hygiene:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: no dependencies
+            run: |
+              # Every import in the shipped code must be JDK. A single line that
+              # is not, including a test-only one, fails this job. The class names
+              # are upper case, so the character class has to be too.
+              allowed='^(java\.[A-Za-z0-9_.]+|turnstile)$'
+              offenders=$(grep -rhoP '^import (static )?\K[^;]+' src bench \
+                | grep -vP "$allowed" | sort -u || true)
+              if [ -n "$offenders" ]; then
+                echo "non-JDK imports:"; echo "$offenders"; exit 1
+              fi
+              echo "every import is JDK: $(grep -rhoP '^import (static )?\K[^;]+' src bench | wc -l) of them"
+          - name: public javadoc is clean
+            run: |
+              mkdir -p out/javadoc
+              # Only src/main/java: this job renders the API a caller can see.
+              # `all` is the whole group set and passes as it stands; there is no
+              # `-package` group to exclude (the names are accessibility, html,
+              # missing, reference, syntax), and both javac and javadoc reject it.
+              javadoc -Xdoclint:all -quiet -d out/javadoc -notimestamp \
+                src/main/java/turnstile/*.java
+          - name: build.sh works from a clean tree
+            run: |
+              rm -rf out
+              sh ./build.sh test
+              sh ./build.sh experiment
+          - name: build.sh is executable in git and parses as POSIX sh
+            run: |
+              git ls-files -s build.sh | grep -q '^100755' || {
+                echo "build.sh must be committed with mode 100755, got:"
+                git ls-files -s build.sh; exit 1; }
+              sh -n build.sh

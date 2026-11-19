@@ -1,0 +1,11 @@
+# Line endings are decided in the repository, not by each clone's platform.
+# `build.sh` runs under `sh` on Linux and macOS in CI, so a CRLF copy of it is
+# not a cosmetic problem: the shebang line stops matching.
+* text=auto eol=lf
+*.java text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.sh text eol=lf
+*.txt text eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf

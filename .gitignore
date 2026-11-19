@@ -1,0 +1,16 @@
+# Build output. The transcripts under bench/ are committed deliberately: they
+# are the evidence behind the numbers in the README, not artifacts to ignore.
+out/
+*.class
+
+# JVM crash logs, which are useful locally and noise in a diff.
+hs_err_pid*.log
+replay_pid*.log
+hs_err*.log
+
+# Editors and OS droppings.
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

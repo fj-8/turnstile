@@ -1,0 +1,53 @@
+java.version         = 17.0.20.1
+java.vendor          = Microsoft
+os.name              = Windows 11
+availableProcessors  = 20
+workload             = 2000000 elements per transfer, capacity 1024, median of 5 reps after 1 warm-up
+
+throughput, ns per element (lower is better), reference = turnstile
+shape                   turnstile                    ABQ                   CLQ*
+P:1 C:1           77                    151 1.96x slower        33 2.33x faster
+P:2 C:2          152                    100 1.52x faster       134 1.13x faster
+P:4 C:4          147                    102 1.44x faster       180 1.22x slower
+P:8 C:8          197                    117 1.68x faster       240 1.22x slower
+P:1 C:4          187                    137 1.36x faster       142 1.32x faster
+P:4 C:1          138                    221 1.60x slower       149 1.08x slower
+  CLQ* is unbounded: it never refuses an offer, so it is not applying
+  back-pressure and is not a like-for-like queue. It also allocates a
+  node per element; turnstile allocates nothing after construction.
+
+ring depth, P:4 C:4, ns per element
+capacity        turnstile            ABQ ABQ vs turnstile
+2                     352         13,622  38.70x slower
+16                    266          2,188   8.23x slower
+64                    248            591   2.38x slower
+256                   172            170   1.01x faster
+1,024                 147            105   1.40x faster
+4,096                 187            108   1.73x faster
+  A capacity-2 turnstile is the two-slot floor the constructor needs; the
+  ABQ column is the same request given to a lock-based queue.
+
+wait policy, P:2 C:2, same workload
+turnstile, spin                           150 ns/element
+turnstile, offer/poll timeout             939 ns/element  6.26x slower
+ArrayBlockingQueue, timed offer/poll         99 ns/element  9.48x faster
+  An empty or full turnstile is discovered by the next poll, so a waiter
+  pays a park and a timer round-trip, while ArrayBlockingQueue is told
+  about the event by a condition signal. Waiting on a queue is ABQ's job
+  and is not what this class is for: see the README's "when not to use".
+
+handoff latency, ns per hop (two threads alternately pushing and taking,
+   two hops per iteration, 200000 iterations per thread)
+queue                                  ns/hop
+turnstile                                 102
+turnstile-timed                            92
+ABQ                                       110
+
+false sharing, 2 threads x 1000000 compare-and-set on their own word
+counters one word apart                    57 ns/op
+counters 128 bytes apart                   35 ns/op  1.63x faster
+  A long[] is 8 bytes per element, so index 0 and 1 share a line while
+  index 0 and 16 do not. The ratio is what the padding in Counter buys.
+
+checksum             = 825,500,596,608 (sum of every element consumed, plus the padding control's counters)
+heap at exit         = 1 MiB used of 4,056 MiB max
