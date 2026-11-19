@@ -1,0 +1,18 @@
+Licensed under either of
+
+  * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
+    https://www.apache.org/licenses/LICENSE-2.0)
+  * MIT license ([LICENSE-MIT](LICENSE-MIT) or
+    https://opensource.org/licenses/MIT)
+
+at your option.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+
+Both full texts are in the two files named above. This notice exists because a
+repository that ships only LICENSE-APACHE and LICENSE-MIT is not always read as
+licensed by tools that look for a file called LICENSE.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this project, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
