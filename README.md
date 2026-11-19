@@ -350,6 +350,14 @@ mode bit, one a comment with no first sentence, one an assertion that needed
 luck. All three needed a second opinion to be visible — a different JDK, a check
 that reads the index instead of the source, or the same suite run a second time.
 
+The macOS legs have been the opposite kind of red: a runner problem rather than a
+result. Two runs on `main` reported both of them `cancelled` with no runner ever
+assigned to the job — no steps, no start time — while the same two JDKs on Linux
+and Windows completed, and the run for `7627612` ended `cancelled` having started
+nothing at all, which is what a queued `main` run becomes when a newer push
+arrives before it begins. None of that is a statement about the queue, and a badge
+cannot tell it apart from a statement that is, so it is written down here.
+
 The whole suite runs twice on every platform, because a concurrency test that
 passes once proves less than it looks like it does. A case
 that hangs becomes a `TIMEOUT` and exit code 2 after
