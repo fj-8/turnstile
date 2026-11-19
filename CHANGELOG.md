@@ -127,5 +127,6 @@ First release: one class, one test harness, one measurement program, one experim
   that had waited exactly 30 ms. The unit is now named in the constant and every
   bound is expressed in it.
 
-[Unreleased]: https://github.com/fj-8/turnstile/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/fj-8/turnstile/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/fj-8/turnstile/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/fj-8/turnstile/releases/tag/v0.1.0
