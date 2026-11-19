@@ -1,0 +1,68 @@
+name: Something is wrong
+description: A case fails, a build warns, a number does not reproduce, or the API is not what the README says
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        You do not have to be sure the defect is in the queue. A case that fails
+        on your machine is worth an issue even when the cause turns out to be the
+        case, the compiler, or the runner that ran out of cores.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - offer / poll (the protocol)
+        - the timed variants
+        - drainTo, size, isEmpty, capacity
+        - a test case or the harness
+        - a benchmark number in the README
+        - the build, the script or CI
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: >-
+        Quote the line. For a benchmark, quote the sentence in the README and the
+        row that printed instead.
+      placeholder: |
+        FAIL size stays inside [0, capacity] under traffic - largest reading 0
+        turnstile tests: 16/17 passed
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to get there from a clean tree
+      description: The commands, in order, from a fresh clone.
+      value: |
+        git clean -xfd
+        sh ./build.sh test
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: frequency
+    attributes:
+      label: How often, over ten runs
+      description: >-
+        Concurrency cases are concurrent. `for i in $(seq 10); do java -cp
+        out/classes turnstile.TurnstileTest; done` and say which number failed.
+      placeholder: |
+        1 of 10, and it was always the P:4 C:4 round
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: java -version, in full
+      description: >-
+        Include the vendor line. The matrix has two JDKs in it because JDK 21's
+        doclint refuses a Javadoc shape that JDK 17's accepts.
+      render: text
+    validations:
+      required: true
