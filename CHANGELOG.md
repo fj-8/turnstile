@@ -53,6 +53,15 @@ queue or in the measurements changed, and no benchmark number in the README move
   because nothing in the suite opened the README. It was verified by breaking it —
   with the count put back to 315 the case reports `which is 316 lines long, is
   quoted as: the queue, 315 lines` and the run exits 1.
+- The CI section said two runs had both macOS legs cancelled. Five consecutive
+  commits whose runs completed did — `a09c74e`, `5f0ae82`, `a6836b2`, `fa7a568`
+  and `ae06561` — and the section now separates the two shapes it was lumping
+  together: on `a6836b2` and `ae06561` every job that got a runner went green and
+  the run still reported `failure`, while on `a09c74e`, `5f0ae82` and `fa7a568`
+  the starved legs arrived beside a real one. Three further runs — `13ad613`,
+  `b674b80`, `7627612` — ended `cancelled` with no job started at all. Same
+  reason as the line count above: a number in a document is re-taken from the
+  thing it describes, not from the note it was copied into.
 
 ## [0.1.0] - 2026-11-19
 
