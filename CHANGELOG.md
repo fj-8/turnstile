@@ -11,9 +11,9 @@ Nothing pending.
 
 ## [0.1.1] - 2026-11-19
 
-Two shipped documentation defects, one packaging file, and one test that could
-fail when nothing was wrong. Nothing in the queue or in the measurements changed,
-and no benchmark number in the README moved.
+Two shipped documentation defects, one packaging file, one test that could fail
+when nothing was wrong, and one test that reads the documentation. Nothing in the
+queue or in the measurements changed, and no benchmark number in the README moved.
 
 ### Fixed
 
@@ -43,6 +43,16 @@ and no benchmark number in the README moved.
   reading, and that first reading must be `capacity`; traffic is proven by the
   producer's and consumer's own counters rather than by a racy observation. The
   queue never had the defect the case could report.
+- The suite is 18 cases, and the last one reads the repository rather than the
+  queue: `the documentation quotes this checkout` compares the numbers the README,
+  `CONTRIBUTING.md` and `docs/ALGORITHMS.md` quote with the tree they describe —
+  the number of registered cases, the length of `Turnstile.java`, `Harness.java`
+  and `build.sh`, and the five transcripts the README says are committed. It found
+  something on its first run: the Javadoc fix further up this list added two lines
+  to `Turnstile.java` and the README went on saying 312, which no test could see
+  because nothing in the suite opened the README. It was verified by breaking it —
+  with the count put back to 315 the case reports `which is 316 lines long, is
+  quoted as: the queue, 315 lines` and the run exits 1.
 
 ## [0.1.0] - 2026-11-19
 

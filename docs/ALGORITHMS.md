@@ -170,7 +170,7 @@ caller re-interrupt or propagate instead of losing the signal. Both are tested
 ## 6. Reproducing any of it
 
 ```console
-$ ./build.sh test            # 17 cases, exit 0 only when all pass
+$ ./build.sh test            # 18 cases, exit 0 only when all pass
 $ ./build.sh bench           # the throughput, depth, wait-policy and latency tables
 $ ./build.sh experiment      # the sequence-stride A/B behind section 3
 ```

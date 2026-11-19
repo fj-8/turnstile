@@ -8,7 +8,10 @@ rules, open an issue first — the rules are the design.
 1. **The JDK is the entire dependency list.** No Maven, no Gradle, no JUnit, no
    JMH, not even as a test dependency. `src/main/java` imports only
    `java.lang.invoke`, `java.util`, `java.util.concurrent`, and that is the whole
-   story; `src/test/java` adds `java.util.concurrent.atomic`. A build that needs a
+   story; `src/test/java` adds `java.util.concurrent.atomic`, `java.io`,
+   `java.nio.file` and `java.util.regex`, which the last case needs because it
+   reads this repository back and checks the numbers its own documentation quotes.
+   A build that needs a
    download is a build someone has to trust rather than run. If you think a
    dependency earns its place, say what it replaces — `Harness.java` is 123 lines
    and it is the test framework, and `Bench.java` is the benchmark harness.
@@ -17,7 +20,11 @@ rules, open an issue first — the rules are the design.
    `TurnstileTest`; "no allocation per element" is `retainedElements` and the
    constructor. "About as fast as `ArrayBlockingQueue`" is not a claim anyone can
    make, so it is a table in `bench/` produced by a committed program and a
-   transcript that is checked in next to it.
+   transcript that is checked in next to it. The last case in `TurnstileTest`
+   reads this repository rather than the queue: the number of registrations in the
+   suite, the length of the three files whose sizes are quoted as arguments, and
+   the five transcripts the README links. Edit a number in a document and that case
+   tells you whether the tree agrees.
 3. **No fabricated performance, including your own.** If a run says
    `ArrayBlockingQueue` is faster at eight producers, that row goes in the README.
    A number that flatters the code and does not reproduce is worse than no number.
@@ -42,7 +49,7 @@ Any JDK 17 or newer. There is no build tool to install.
 
 ```console
 $ ./build.sh            # compiles main, tests and bench into out/classes
-$ ./build.sh test       # ... and runs the 17-case suite
+$ ./build.sh test       # ... and runs the 18-case suite
 $ ./build.sh bench      # ... and runs the measurement program
 ```
 

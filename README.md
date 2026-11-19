@@ -7,7 +7,7 @@
   <a href="#license"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue" alt="License: MIT OR Apache-2.0"></a>
   <img src="https://img.shields.io/badge/dependencies-0-informational" alt="Zero dependencies">
   <img src="https://img.shields.io/badge/java-17%2B-orange" alt="Java 17+">
-  <img src="https://img.shields.io/badge/tests-17%20passing-brightgreen" alt="17 tests">
+  <img src="https://img.shields.io/badge/tests-18%20passing-brightgreen" alt="18 tests">
   <img src="https://img.shields.io/badge/locks-0-green" alt="No locks">
 </p>
 
@@ -58,7 +58,7 @@ Any JDK 17 or newer. No Maven, no Gradle, nothing to fetch.
 
 ```console
 $ ./build.sh              # compiles main, tests and bench with -Werror
-$ ./build.sh test         # ... and runs the 17-case suite
+$ ./build.sh test         # ... and runs the 18-case suite
 $ ./build.sh bench        # ... and runs the measurement program
 $ ./build.sh experiment   # ... and runs the sequence-stride A/B
 ```
@@ -282,12 +282,20 @@ for a slot, and the consumer's claim condition can only be satisfied by the
 release that published the item it is about to read. The slot itself needs no
 ordering edge at all — it is only ever read by the thread that won the claim.
 
-The 17 cases are not all concurrency. Half of them are the boring contract —
+The 18 cases are not all concurrency. Most of them are the boring contract —
 capacity rounding, rejected nulls, a full ring that refuses, an interrupt that
 propagates — and they are the ones that caught the first two real bugs, both
 recorded in [`CHANGELOG.md`](CHANGELOG.md) rather than quietly fixed: a swapped
 comparison in the gap arithmetic that made every `offer` on an empty ring return
 `false`, and a capacity of one that the protocol cannot express at all.
+
+The last case reads the rest of the repository instead of the queue: it counts the
+suite's own registrations, the three file lengths this README uses as arguments,
+and the five transcripts it claims are committed, and it fails when a document and
+the tree disagree. That one is not hypothetical either. The Javadoc fix that made
+the tag build on JDK 21 added two lines to `Turnstile.java`, the README went on
+saying 312, and nothing in the suite could notice, because nothing in the suite
+read the README. A number that only a human can check is a number that drifts.
 
 ## When not to use this
 
@@ -307,20 +315,20 @@ comparison in the gap arithmetic that made every `offer` on an empty ring return
 ## Development
 
 ```console
-$ ./build.sh test          # 17 cases, exit 0 only when all pass
+$ ./build.sh test          # 18 cases, exit 0 only when all pass
 $ ./build.sh bench         # the throughput, depth, wait-policy and latency tables
 $ ./build.sh experiment    # the sequence-stride A/B
 ```
 
-- `src/main/java/turnstile/Turnstile.java` — the queue, 312 lines, one class.
+- `src/main/java/turnstile/Turnstile.java` — the queue, 316 lines, one class.
 - `src/test/java/turnstile/Harness.java` — the test framework: cases, a watchdog,
   exit codes.
-- `src/test/java/turnstile/TurnstileTest.java` — the 17 cases.
+- `src/test/java/turnstile/TurnstileTest.java` — the 18 cases.
 - `bench/java/turnstile/Bench.java` — the measurement program whose output is in
   `bench/`.
 - `bench/java/turnstile/SequenceStrideExperiment.java` — the padding A/B.
 
-`.github/workflows/ci.yml` is ten jobs: the 17-case suite run **twice** per
+`.github/workflows/ci.yml` is ten jobs: the 18-case suite run **twice** per
 platform on JDK 17 and 21 across Linux, Windows and macOS (six), then four
 hygiene checks — an import allowlist that fails on any package outside the JDK,
 `javadoc -Xdoclint:all` on the public API, `build.sh test` and `build.sh

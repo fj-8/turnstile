@@ -1,5 +1,8 @@
 package turnstile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,6 +11,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The suite: {@code java turnstile.TurnstileTest}, exit code 0 when everything passes.
@@ -46,6 +51,7 @@ public final class TurnstileTest {
         Harness.test("every capacity from 1 to 1025 round-trips a live round", TurnstileTest::capacitySweep);
         Harness.test("timed offers all land while a consumer drains", TurnstileTest::timedOffersUnderContention);
         Harness.test("size stays inside [0, capacity] under traffic", TurnstileTest::sizeBounds);
+        Harness.test("the documentation quotes this checkout", TurnstileTest::documentationClaims);
         System.exit(Harness.report("turnstile tests"));
     }
 
@@ -545,5 +551,100 @@ public final class TurnstileTest {
                 "traffic ran while it sampled: " + offered.get() + " offered, " + polled.get()
                         + " polled, readings spanned " + extremes[0] + ".." + extremes[1]);
         Harness.check(!queue.isEmpty() || queue.size() == 0, "isEmpty and size agree at rest");
+    }
+
+    /**
+     * The documentation quotes this checkout: how many cases the suite has, how
+     * long the three files whose sizes are used as arguments are, and which
+     * transcripts are claimed to be committed next to them. One of those numbers
+     * went stale the week this case did not exist — a Javadoc fix added two lines
+     * to the queue and the README kept reporting the old count, on a machine where
+     * nothing else reads the README.
+     */
+    private static void documentationClaims() throws Exception {
+        Path readme = Path.of("README.md");
+        Path contributing = Path.of("CONTRIBUTING.md");
+        Path algorithms = Path.of("docs", "ALGORITHMS.md");
+        Path queue = Path.of("src", "main", "java", "turnstile", "Turnstile.java");
+        Path harness = Path.of("src", "test", "java", "turnstile", "Harness.java");
+        Path suite = Path.of("src", "test", "java", "turnstile", "TurnstileTest.java");
+        Path script = Path.of("build.sh");
+        for (Path path : List.of(readme, contributing, algorithms, queue, harness, suite, script)) {
+            Harness.check(Files.isRegularFile(path),
+                    "this case reads the checkout, so run the suite from the repository root; no "
+                            + path + " under " + Path.of("").toAbsolutePath());
+        }
+
+        String documentation = Files.readString(readme) + "\n" + Files.readString(contributing)
+                + "\n" + Files.readString(algorithms);
+        String readMe = Files.readString(readme);
+
+        // Built in two pieces so that this method does not itself contain the
+        // string it counts occurrences of.
+        int cases = occurrences(Files.readString(suite), "Harness." + "test(");
+        Harness.check(cases > 0, "the suite registers its own cases, found " + cases);
+        List<String> quoted = new ArrayList<>();
+        quoted.addAll(matches(documentation, "(\\d+) cases"));
+        quoted.addAll(matches(documentation, "(\\d+)-case suite"));
+        quoted.addAll(matches(documentation, "badge/tests-(\\d+)%20passing"));
+        Harness.check(!quoted.isEmpty(), "the docs quote the suite size somewhere");
+        for (String size : quoted) {
+            Harness.checkEquals("the suite has " + cases + " registrations, a document says",
+                    cases, Integer.parseInt(size));
+        }
+
+        Harness.check(readMe.contains("the queue, " + lineCount(queue) + " lines"),
+                "README's line count for Turnstile.java, which is " + lineCount(queue)
+                        + " lines long, is quoted as: " + excerpt(readMe, "the queue, "));
+        Harness.check(readMe.contains("test framework is " + lineCount(harness) + " lines"),
+                "README's line count for Harness.java, which is " + lineCount(harness)
+                        + " lines long, is quoted as: " + excerpt(readMe, "test framework is "));
+        Harness.check(Files.readString(contributing).contains("`Harness.java` is "
+                        + lineCount(harness) + " lines"),
+                "CONTRIBUTING quotes the same Harness.java length");
+        Harness.check(readMe.contains("`build.sh` is " + lineCount(script) + " lines of POSIX shell"),
+                "README's line count for build.sh, which is " + lineCount(script)
+                        + " lines long, is quoted as: " + excerpt(readMe, "`build.sh` is "));
+
+        List<String> transcripts = matches(readMe, "\\]\\((bench/[A-Za-z0-9_.-]+\\.txt)\\)");
+        Harness.check(transcripts.size() == 5,
+                "five transcripts are claimed to be committed; the README links " + transcripts);
+        for (String transcript : transcripts) {
+            Harness.check(Files.isRegularFile(Path.of(transcript)),
+                    "the README links a transcript that is not in the checkout: " + transcript);
+        }
+    }
+
+    /** Every capture group 1 of {@code regex} in {@code text}. */
+    private static List<String> matches(String text, String regex) {
+        List<String> found = new ArrayList<>();
+        Matcher matcher = Pattern.compile(regex).matcher(text);
+        while (matcher.find()) {
+            found.add(matcher.group(1));
+        }
+        return found;
+    }
+
+    private static int occurrences(String text, String needle) {
+        int count = 0;
+        for (int at = text.indexOf(needle); at >= 0; at = text.indexOf(needle, at + needle.length())) {
+            count++;
+        }
+        return count;
+    }
+
+    /** The same thing {@code wc -l} counts: the line separators present. */
+    private static int lineCount(Path path) throws IOException {
+        return occurrences(Files.readString(path), "\n");
+    }
+
+    /** The quoted number next to a claim, so a failure says what to edit. */
+    private static String excerpt(String text, String before) {
+        int at = text.indexOf(before);
+        if (at < 0) {
+            return "the phrase " + before + " does not appear at all";
+        }
+        int end = Math.min(text.length(), at + before.length() + 12);
+        return text.substring(at, end).replace('\n', ' ');
     }
 }
