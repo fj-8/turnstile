@@ -138,7 +138,7 @@ across all three, not the best of them. Nanoseconds per element, lower is better
 | 2 and 2 | 133–152 | 93–100 | `ArrayBlockingQueue`, by 1.34–1.60× |
 | 4 and 4 | 146–148 | 98–102 | `ArrayBlockingQueue`, by 1.44–1.51× |
 | 8 and 8 | 190–286 | 111–117 | `ArrayBlockingQueue`, by 1.68–2.58× |
-| 1 and 4 | 141–187 | 137–143 | indistinguishable |
+| 1 and 4 | 141–187 | 137–143 | `ArrayBlockingQueue`, by 1.01–1.36× |
 | 4 and 1 | 138–173 | 192–221 | turnstile, by 1.11–1.60× |
 
 What the class is actually for is the second table: the same transfer at
@@ -146,23 +146,25 @@ different ring depths, four producers and four consumers.
 
 | capacity | turnstile | `ArrayBlockingQueue` |
 | --- | --- | --- |
-| 2 | 245–352 | 12,611–13,622 |
+| 2 | 246–352 | 12,611–13,622 |
 | 16 | 227–266 | 2,106–2,188 |
 | 64 | 207–248 | 546–591 |
 | 256 | 162–205 | 170–186 |
 | 1,024 | 147–211 | 100–108 |
 | 4,096 | 187–194 | 95–108 |
 
-Read the two columns as shapes, not as a winner. `ArrayBlockingQueue` spans three
-orders of magnitude across those six rows — every operation takes a lock and
-touches two condition queues, and at depth 2 with eight threads that lock *is*
-the workload. This queue spans about 2× from its shallowest to its deepest ring,
-because a slot claim is one `compareAndSet` on a cursor and the ring's depth only
-changes how often a producer waits for its turn. From depth 1,024 the lock stops
-being the bottleneck and the condition-signal wake-ups win it back.
+Read the two columns as shapes, not as a winner. `ArrayBlockingQueue` spans more
+than two orders of magnitude across those six rows — 130× to 140× between its best
+and worst — because every operation takes a lock and touches two condition queues,
+and at depth 2 with eight threads that lock *is* the workload. This queue spans
+under 2.5× from its shallowest to its deepest ring, because a slot claim is one
+`compareAndSet` on a cursor and the ring's depth only changes how often a producer
+waits for its turn. From depth 1,024 the lock stops being the bottleneck and the
+condition-signal wake-ups win it back.
 
-Both runs are the same workload, the same program and the same machine as the
-tables. A capacity-2 queue is the two-slot floor the constructor needs, so the
+Every row above comes from one program, one machine and the same three launches;
+the requested capacity is the only thing the depth rows change. A capacity-2
+queue is the two-slot floor the constructor needs, so the
 first row is not a hypothetical: it is what you get if you ask for a one-slot
 ring and the class tells you so by rounding up.
 
