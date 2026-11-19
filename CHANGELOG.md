@@ -7,7 +7,16 @@ tested: 0.1.0 is the first release anyone outside the author's machine can insta
 
 ## [Unreleased]
 
-Nothing pending.
+### Fixed
+- The README's CI paragraph counted "five consecutive commits whose runs
+  completed". That window moved twice while `v0.1.1` was being cut: `771a8b8` and
+  `f830e3c` landed with both macOS legs starved, exactly like the five before
+  them, so the sentence was describing a past afternoon in the present tense. It
+  quotes a closed range now — `a09c74e` to `f830e3c`, seven runs that started
+  jobs, both legs starved in every one, four with nothing else failing and three
+  with a real failure beside the starvation — and names the `gh api` call the
+  list came from, so the next reader can re-measure it rather than trust the
+  count.
 
 ## [0.1.1] - 2026-11-19
 

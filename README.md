@@ -352,17 +352,22 @@ that reads the index instead of the source, or the same suite run a second time.
 
 The macOS legs have been the opposite kind of red: a runner problem rather than a
 result. Both of them reported `cancelled` with no runner ever assigned to the job
-— no steps, no start time — on five consecutive commits whose runs completed:
-`a09c74e`, `5f0ae82`, `a6836b2`, `fa7a568` and `ae06561`. On two of those five,
-`a6836b2` and `ae06561`, every job that did get a runner went green, and the run
-still reported `failure` — that is the shape indistinguishable from a compile
-error in a badge. On the other three the starved legs arrived alongside a real
-one: doclint at `a09c74e`, the file mode at `5f0ae82`, the ring-size assertion at
-`fa7a568`. And three runs — `13ad613`, `b674b80` and the run for `7627612` —
-ended `cancelled` having started nothing at all, which is what a queued `main`
-run becomes when a newer push arrives before it begins. None of that is a
-statement about the queue, and a badge cannot tell it apart from a statement that
-is, so it is written down here.
+— no steps, no start time — on the seven consecutive commits whose runs started
+jobs, from `a09c74e` to `f830e3c`: `a09c74e`, `5f0ae82`, `a6836b2`, `fa7a568`,
+`ae06561`, `771a8b8` and `f830e3c`. On four of those seven — `a6836b2`,
+`ae06561`, `771a8b8` and `f830e3c` — every job that did get a runner went green,
+and the run still reported `failure`: that is the shape indistinguishable from a
+compile error in a badge. On the other three the starved legs arrived alongside a
+real one: doclint at `a09c74e`, the file mode at `5f0ae82`, the ring-size
+assertion at `fa7a568`. And four runs — `13ad613`, `b674b80`, `7627612` and
+`73f4322` — ended `cancelled` having started nothing at all, which is what a
+queued `main` run becomes when a newer push arrives before it begins. The range
+is written from `a09c74e` to `f830e3c` rather than as "the last seven", because
+"the last seven" is a thing the next run changes and this is a thing that
+happened; `gh api repos/fj-8/turnstile/actions/runs?branch=main&event=push`, read
+against each run's `jobs_url`, prints it. None of that is a statement about the
+queue, and a badge cannot tell it apart from a statement that is, so it is
+written down here.
 
 The whole suite runs twice on every platform, because a concurrency test that
 passes once proves less than it looks like it does. A case
