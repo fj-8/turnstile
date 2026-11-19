@@ -78,12 +78,20 @@ load **of the same field**. The queue only needs one such edge per element, and 
 deliberately puts it on the sequence word rather than on the element slot:
 
 ```
-producer:  slots[i] = item        (setOpaque  — no ordering needed yet)
-           S[index] = p + 1       (setRelease — publishes everything above)
+producer   slots[index] = item     setOpaque   — nothing to order yet
+           S[index]     = p + 1    setRelease  — publishes the line above
 
-consumer:  S[index]             (getAcquire — the matching edge)
-           item = slots[i]       (getOpaque  — sees the value the producer stored)
+consumer   S[index]                getAcquire  — the matching edge
+           item = slots[index]     getOpaque   — sees what was written
+           slots[index] = null     setOpaque   — nothing retained once drained
+           S[index]     = q + cap  setRelease  — the slot's next turn
 ```
+
+The two release stores are different obligations: one publishes an element into a
+slot nobody had read yet, the other returns a drained slot to the ring. The
+acquire in the middle is the only edge an element needs, and the three lines under
+it are everything `poll` does between winning the claim and handing the value
+back.
 
 Everything the producer did before the release store — including the element
 reference itself *and the element's own mutable fields*, which is the part people

@@ -264,20 +264,21 @@ write.
 The short version of the memory model, since it is the part people get wrong:
 
 ```
-producer   slots[index] = item        setOpaque   — nothing to order yet
-           sequences[j] = p + 1      setRelease  — publishes the line above
+producer   slots[index]     = item      setOpaque   — nothing to order yet
+           sequences[index] = p + 1     setRelease  — publishes the line above
 
-consumer   sequences[j]              getAcquire  — the matching edge
-           item = slots[index]        getOpaque   — sees what was written
-           slots[index] = null        setOpaque   — nothing retained once drained
-           sequences[j] = q + cap     setRelease  — the slot's next turn
+consumer   sequences[index]             getAcquire  — the matching edge
+           item = slots[index]          getOpaque   — sees what was written
+           slots[index]     = null      setOpaque   — nothing retained once drained
+           sequences[index] = q + cap   setRelease  — the slot's next turn
 ```
 
-One release store and one acquire load *of the same word* carry both the
-reference and the element's own mutable fields. That is why the acquire sits on
-the sequence array and not on the slot: the slot is only ever read by the thread
-that won the claim CAS for that turn, and `j = cursor & mask` is the same index
-on both sides.
+One release store and one acquire load *of the same word* carry both the reference
+and the element's own mutable fields. That is why the acquire sits on the sequence
+array rather than on the slot: `sequences[index]` is the one word both sides touch
+for a slot, and the consumer's claim condition can only be satisfied by the
+release that published the item it is about to read. The slot itself needs no
+ordering edge at all — it is only ever read by the thread that won the claim.
 
 The 17 cases are not all concurrency. Half of them are the boring contract —
 capacity rounding, rejected nulls, a full ring that refuses, an interrupt that
