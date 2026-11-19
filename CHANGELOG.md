@@ -9,6 +9,30 @@ tested: 0.1.0 is the first release anyone outside the author's machine can insta
 
 Nothing pending.
 
+## [0.1.1] - 2026-11-19
+
+Documentation and packaging metadata. Nothing in the queue, the harness or the
+measurements changed, and no benchmark number in the README moved.
+
+### Fixed
+
+- The constructor and `capacity()` carried Javadoc that opened straight into
+  `@param` and `@return` with no leading sentence. JDK 17's doclint accepts that
+  shape, JDK 21's says `warning: no main description`, and the compile command
+  the README tells you to run carries `-Werror` — so `v0.1.0`'s own source did
+  not build on JDK 21 with the documented command. Both comments have a first
+  line now; `CONTRIBUTING.md` explains why the matrix has two JDKs in it rather
+  than the one this machine has.
+- `build.sh` is committed with mode `100755` again. It dropped to `100644` in the
+  commit after `v0.1.0`, because that working copy sits on a filesystem that does
+  not report the executable bit while `core.fileMode` was still `true`, and a
+  mode change nobody made rode into a documentation commit unnoticed. No released
+  artifact carried it: the `script-hygiene` leg refused it on `main` first.
+- A root `LICENSE` file now states both grants, the SPDX identifier that already
+  heads every source file, and the contribution clause. The two full texts were
+  always in `LICENSE-APACHE` and `LICENSE-MIT`; this is the file tools look for
+  when they do not read the README.
+
 ## [0.1.0] - 2026-11-19
 
 First release: one class, one test harness, one measurement program, one experiment.
