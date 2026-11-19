@@ -78,6 +78,8 @@ public final class Turnstile<E> {
     private final Counter tail = new Counter();
 
     /**
+     * Creates an empty ring.
+     *
      * @param requestedCapacity room for at least one element; rounded up to a
      *                          power of two, with a floor of two slots
      * @throws IllegalArgumentException if the request is not positive, or rounds
@@ -114,6 +116,8 @@ public final class Turnstile<E> {
     }
 
     /**
+     * Slots this ring can hold, after the constructor's rounding.
+     *
      * @return the effective capacity: the request rounded up to a power of two,
      *         with a floor of two slots
      */

@@ -30,7 +30,11 @@ Two smaller conventions:
   line above the annotation.
 - Javadoc on the public surface, comments for the non-obvious *why*. The two
   longest comments in `Turnstile.java` explain the two-slot floor and the
-  happens-before edge; neither explains what the next line of code does.
+  happens-before edge; neither explains what the next line of code does. The
+  matrix earns its keep here: JDK 21's doclint rejects a block that opens with
+  `@param` or `@return` and has no leading sentence (`warning: no main
+  description`), JDK 17's accepts the same file, and `-Werror` is what makes the
+  difference a build failure on the JDK 21 legs instead of a line in the log.
 
 ## Build, test, bench
 
